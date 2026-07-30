@@ -1,0 +1,23 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017
+      - DATABASE_NAME=task_manager
+      - JWT_SECRET=change-me-in-production
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRY_MINUTES=60
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

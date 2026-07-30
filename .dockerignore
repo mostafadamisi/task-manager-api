@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.env
+*.log
+.venv/
+venv/
+env/
+.git/
+.gitignore
+*.ps1
+*.bat
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+test_*.ps1

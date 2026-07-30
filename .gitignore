@@ -15,3 +15,5 @@ env/
 .idea/
 .vscode/
 *.swp
+*.ps1
+*.bat
