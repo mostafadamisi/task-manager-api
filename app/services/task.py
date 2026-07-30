@@ -21,6 +21,14 @@ def doc_to_response(doc) -> TaskResponse:
     )
 
 
+async def get_task_or_404(task_id: str) -> dict:
+    db = get_db()
+    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    return task
+
+
 async def create_task(data: TaskCreate, user_id: str) -> TaskResponse:
     db = get_db()
 
@@ -54,10 +62,7 @@ async def get_task_by_id(task_id: str) -> TaskResponse:
 
 async def update_task(task_id: str, data: TaskUpdate, user_id: str) -> TaskResponse:
     db = get_db()
-
-    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    task = await get_task_or_404(task_id)
 
     update_data = data.model_dump(exclude_unset=True)
     if not update_data:
@@ -92,9 +97,7 @@ async def update_task(task_id: str, data: TaskUpdate, user_id: str) -> TaskRespo
 
 async def delete_task(task_id: str, user_id: str) -> None:
     db = get_db()
-    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    await get_task_or_404(task_id)
     await db.tasks.delete_one({"_id": ObjectId(task_id)})
     await create_activity(task_id, user_id, "task.deleted")
 
