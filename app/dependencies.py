@@ -1,8 +1,11 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from app.utils.security import decode_access_token
 
 bearer = HTTPBearer()
+limiter = Limiter(key_func=get_remote_address)
 
 
 async def get_current_user_id(credentials: HTTPAuthorizationCredentials = Depends(bearer)) -> str:
