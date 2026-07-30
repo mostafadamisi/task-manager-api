@@ -11,5 +11,3 @@ class ActivityResponse(BaseModel):
     changes: Optional[dict]
     timestamp: datetime
 
-    class Config:
-        from_attributes = True

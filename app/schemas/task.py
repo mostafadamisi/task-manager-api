@@ -31,5 +31,3 @@ class TaskResponse(BaseModel):
     created_by: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True

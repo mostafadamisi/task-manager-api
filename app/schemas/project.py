@@ -16,5 +16,3 @@ class ProjectResponse(BaseModel):
     members: list[str]
     created_at: datetime
 
-    class Config:
-        from_attributes = True
