@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from app.database import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
+from app.services.activity import create_activity
 
 
 def doc_to_response(doc) -> TaskResponse:
@@ -38,6 +39,7 @@ async def create_task(data: TaskCreate, user_id: str) -> TaskResponse:
     }
     result = await db.tasks.insert_one(task)
     task["_id"] = result.inserted_id
+    await create_activity(str(result.inserted_id), user_id, "task.created")
     return doc_to_response(task)
 
 
@@ -70,6 +72,20 @@ async def update_task(task_id: str, data: TaskUpdate, user_id: str) -> TaskRespo
         {"$set": update_data},
     )
     updated = await db.tasks.find_one({"_id": ObjectId(task_id)})
+
+    changes = {}
+    for field in update_data:
+        if field == "updated_at":
+            continue
+        old_val = task.get(field)
+        new_val = updated.get(field)
+        if str(old_val) != str(new_val):
+            changes[field] = {"old": str(old_val) if old_val else None, "new": str(new_val) if new_val else None}
+
+    if changes:
+        action = "task.status_changed" if list(changes.keys()) == ["status"] else "task.updated"
+        await create_activity(task_id, user_id, action, changes)
+
     return doc_to_response(updated)
 
 
@@ -79,6 +95,7 @@ async def delete_task(task_id: str, user_id: str) -> None:
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     await db.tasks.delete_one({"_id": ObjectId(task_id)})
+    await create_activity(task_id, user_id, "task.deleted")
 
 
 async def filter_tasks(

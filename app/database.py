@@ -16,6 +16,9 @@ async def connect_db():
     await db.tasks.create_index([("assignee", 1), ("status", 1)])
     await db.tasks.create_index("due_date")
 
+    await db.activities.create_index("task_id")
+    await db.activities.create_index([("task_id", 1), ("timestamp", -1)])
+
 
 async def close_db():
     global client
