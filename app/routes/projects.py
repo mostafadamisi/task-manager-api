@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Request, status
+from typing import Optional
+from fastapi import APIRouter, Depends, Query, Request, status
 from app.dependencies import get_current_user_id, limiter
 from app.schemas.project import ProjectCreate, ProjectResponse
 from app.services.project import create_project, get_all_projects, get_project_by_id, delete_project
@@ -14,8 +15,12 @@ async def create(request: Request, data: ProjectCreate, user_id: str = Depends(g
 
 @router.get("/")
 @limiter.limit("120/minute")
-async def list_all(request: Request):
-    return await get_all_projects()
+async def list_all(
+    request: Request,
+    page: Optional[int] = Query(1, ge=1),
+    limit: Optional[int] = Query(20, ge=1, le=100),
+):
+    return await get_all_projects(page, limit)
 
 
 @router.get("/{project_id}")

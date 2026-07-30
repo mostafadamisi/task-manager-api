@@ -25,10 +25,13 @@ async def create_project(data: ProjectCreate, user_id: str) -> ProjectResponse:
     )
 
 
-async def get_all_projects() -> list[ProjectResponse]:
+async def get_all_projects(page: int = 1, limit: int = 20) -> dict:
     db = get_db()
+    skip = (page - 1) * limit
+    total = await db.projects.count_documents({})
+    cursor = db.projects.find().sort("created_at", -1).skip(skip).limit(limit)
     projects = []
-    async for p in db.projects.find().sort("created_at", -1):
+    async for p in cursor:
         projects.append(
             ProjectResponse(
                 id=str(p["_id"]),
@@ -39,7 +42,8 @@ async def get_all_projects() -> list[ProjectResponse]:
                 created_at=p["created_at"],
             )
         )
-    return projects
+    pages = (total + limit - 1) // limit
+    return {"items": projects, "total": total, "page": page, "limit": limit, "pages": pages}
 
 
 async def get_project_by_id(project_id: str) -> ProjectResponse:

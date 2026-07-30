@@ -17,7 +17,7 @@ async def test_list_projects(client, auth_headers):
     }, headers=auth_headers)
     res = await client.get("/projects/")
     assert res.status_code == 200
-    assert len(res.json()) >= 1
+    assert len(res.json()["items"]) >= 1
 
 
 async def test_get_project_by_id(client, auth_headers):

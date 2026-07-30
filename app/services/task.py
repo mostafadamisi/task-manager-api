@@ -86,7 +86,9 @@ async def filter_tasks(
     assignee: str | None = None,
     due_date: datetime | None = None,
     project_id: str | None = None,
-) -> list[TaskResponse]:
+    page: int = 1,
+    limit: int = 20,
+) -> dict:
     db = get_db()
     query = {}
 
@@ -99,7 +101,11 @@ async def filter_tasks(
     if project_id:
         query["project_id"] = ObjectId(project_id)
 
+    skip = (page - 1) * limit
+    total = await db.tasks.count_documents(query)
+    cursor = db.tasks.find(query).sort("created_at", -1).skip(skip).limit(limit)
     tasks = []
-    async for t in db.tasks.find(query).sort("created_at", -1):
+    async for t in cursor:
         tasks.append(doc_to_response(t))
-    return tasks
+    pages = (total + limit - 1) // limit
+    return {"items": tasks, "total": total, "page": page, "limit": limit, "pages": pages}

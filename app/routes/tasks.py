@@ -28,8 +28,10 @@ async def list_filtered(
     assignee: Optional[str] = Query(None),
     due_date: Optional[datetime] = Query(None),
     project_id: Optional[str] = Query(None),
+    page: Optional[int] = Query(1, ge=1),
+    limit: Optional[int] = Query(20, ge=1, le=100),
 ):
-    return await filter_tasks(status, assignee, due_date, project_id)
+    return await filter_tasks(status, assignee, due_date, project_id, page, limit)
 
 
 @router.get("/{task_id}")

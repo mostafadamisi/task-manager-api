@@ -79,4 +79,5 @@ async def test_filter_tasks_by_status(client, auth_headers):
 
     res = await client.get("/tasks/?status=todo")
     assert res.status_code == 200
-    assert all(t["status"] == "todo" for t in res.json())
+    data = res.json()
+    assert all(t["status"] == "todo" for t in data["items"])
