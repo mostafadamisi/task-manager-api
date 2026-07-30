@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectResponse
+from app.utils.pagination import paginate
 
 
 def doc_to_response(doc) -> ProjectResponse:
@@ -46,14 +47,7 @@ async def create_project(data: ProjectCreate, user_id: str) -> ProjectResponse:
 
 async def get_all_projects(page: int = 1, limit: int = 20) -> dict:
     db = get_db()
-    skip = (page - 1) * limit
-    total = await db.projects.count_documents({})
-    cursor = db.projects.find().sort("created_at", -1).skip(skip).limit(limit)
-    projects = []
-    async for p in cursor:
-        projects.append(doc_to_response(p))
-    pages = (total + limit - 1) // limit
-    return {"items": projects, "total": total, "page": page, "limit": limit, "pages": pages}
+    return await paginate(db.projects, {}, page, limit, mapper=doc_to_response)
 
 
 async def get_project_by_id(project_id: str) -> ProjectResponse:

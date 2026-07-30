@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from app.database import get_db
 from app.schemas.activity import ActivityResponse
+from app.utils.pagination import paginate
 
 
 def doc_to_response(doc) -> ActivityResponse:
@@ -34,16 +35,4 @@ async def get_task_activities(
 ) -> dict:
     db = get_db()
     query = {"task_id": ObjectId(task_id)}
-    skip = (page - 1) * limit
-    total = await db.activities.count_documents(query)
-    cursor = (
-        db.activities.find(query)
-        .sort("timestamp", -1)
-        .skip(skip)
-        .limit(limit)
-    )
-    items = []
-    async for doc in cursor:
-        items.append(doc_to_response(doc))
-    pages = (total + limit - 1) // limit
-    return {"items": items, "total": total, "page": page, "limit": limit, "pages": pages}
+    return await paginate(db.activities, query, page, limit, sort_key="timestamp", mapper=doc_to_response)

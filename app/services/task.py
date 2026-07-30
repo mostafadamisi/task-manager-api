@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from app.database import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.services.activity import create_activity
+from app.utils.pagination import paginate
 
 
 def doc_to_response(doc) -> TaskResponse:
@@ -122,11 +123,4 @@ async def filter_tasks(
     if project_id:
         query["project_id"] = ObjectId(project_id)
 
-    skip = (page - 1) * limit
-    total = await db.tasks.count_documents(query)
-    cursor = db.tasks.find(query).sort("created_at", -1).skip(skip).limit(limit)
-    tasks = []
-    async for t in cursor:
-        tasks.append(doc_to_response(t))
-    pages = (total + limit - 1) // limit
-    return {"items": tasks, "total": total, "page": page, "limit": limit, "pages": pages}
+    return await paginate(db.tasks, query, page, limit, mapper=doc_to_response)
