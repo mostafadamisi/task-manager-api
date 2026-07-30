@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 from fastapi import APIRouter, Depends, Query, Request, status
 from app.dependencies import get_current_user_id, limiter
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
@@ -24,7 +24,7 @@ async def create(request: Request, data: TaskCreate, user_id: str = Depends(get_
 @limiter.limit("120/minute")
 async def list_filtered(
     request: Request,
-    status: Optional[str] = Query(None),
+    status: Optional[Literal["todo", "in_progress", "done"]] = Query(None),
     assignee: Optional[str] = Query(None),
     due_date: Optional[datetime] = Query(None),
     project_id: Optional[str] = Query(None),

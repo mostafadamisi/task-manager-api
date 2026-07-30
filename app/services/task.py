@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Literal, Optional
 from bson import ObjectId
 from fastapi import HTTPException, status
 from app.database import get_db
@@ -99,7 +100,7 @@ async def delete_task(task_id: str, user_id: str) -> None:
 
 
 async def filter_tasks(
-    status: str | None = None,
+    status: Optional[Literal["todo", "in_progress", "done"]] = None,
     assignee: str | None = None,
     due_date: datetime | None = None,
     project_id: str | None = None,
