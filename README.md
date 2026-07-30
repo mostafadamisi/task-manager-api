@@ -13,7 +13,6 @@ A RESTful task management API built with **FastAPI** and **MongoDB**, featuring 
 | Auth        | JWT (python-jose) + bcrypt           |
 | Validation  | Pydantic v2                          |
 | Rate Limit  | slowapi                              |
-| Logging     | Python logging (console + file)      |
 | Tests       | pytest + httpx (ASGI transport)      |
 | Container   | Docker + docker-compose              |
 
