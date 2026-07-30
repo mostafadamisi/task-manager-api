@@ -61,7 +61,22 @@ async def get_task_by_id(task_id: str) -> TaskResponse:
     return doc_to_response(task)
 
 
-async def update_task(task_id: str, data: TaskUpdate, user_id: str) -> TaskResponse:
+def compute_task_changes(old_task: dict, update_data: dict) -> dict | None:
+    changes = {}
+    for field, new_val in update_data.items():
+        if field == "updated_at":
+            continue
+        old_val = old_task.get(field)
+        if str(old_val) != str(new_val):
+            changes[field] = {"old": str(old_val) if old_val else None, "new": str(new_val) if new_val else None}
+    return changes if changes else None
+
+
+def classify_task_change_action(changes: dict) -> str:
+    return "task.status_changed" if list(changes.keys()) == ["status"] else "task.updated"
+
+
+async def update_task(task_id: str, data: TaskUpdate) -> TaskResponse:
     db = get_db()
     task = await get_task_or_404(task_id)
 
@@ -79,21 +94,7 @@ async def update_task(task_id: str, data: TaskUpdate, user_id: str) -> TaskRespo
         {"$set": update_data},
     )
     updated = await db.tasks.find_one({"_id": ObjectId(task_id)})
-
-    changes = {}
-    for field in update_data:
-        if field == "updated_at":
-            continue
-        old_val = task.get(field)
-        new_val = updated.get(field)
-        if str(old_val) != str(new_val):
-            changes[field] = {"old": str(old_val) if old_val else None, "new": str(new_val) if new_val else None}
-
-    if changes:
-        action = "task.status_changed" if list(changes.keys()) == ["status"] else "task.updated"
-        await create_activity(task_id, user_id, action, changes)
-
-    return doc_to_response(updated)
+    return doc_to_response(updated), task, update_data
 
 
 async def delete_task(task_id: str, user_id: str) -> None:

@@ -9,7 +9,10 @@ from app.services.task import (
     update_task,
     delete_task,
     filter_tasks,
+    compute_task_changes,
+    classify_task_change_action,
 )
+from app.services.activity import create_activity
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
@@ -43,7 +46,12 @@ async def get_one(request: Request, task_id: str):
 @router.put("/{task_id}")
 @limiter.limit("120/minute")
 async def update(request: Request, task_id: str, data: TaskUpdate, user_id: str = Depends(get_current_user_id)):
-    return await update_task(task_id, data, user_id)
+    response, old_task, update_data = await update_task(task_id, data)
+    changes = compute_task_changes(old_task, update_data)
+    if changes:
+        action = classify_task_change_action(changes)
+        await create_activity(task_id, user_id, action, changes)
+    return response
 
 
 @router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
