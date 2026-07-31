@@ -56,6 +56,16 @@ async def test_delete_project_invalid_id_bad_request(client, auth_headers):
     assert res.status_code == 400
 
 
+async def test_get_task_invalid_id_bad_request(client):
+    res = await client.get(f"/tasks/{INVALID_ID}")
+    assert res.status_code == 400
+
+
+async def test_get_task_not_found(client):
+    res = await client.get("/tasks/000000000000000000000000")
+    assert res.status_code == 404
+
+
 async def test_create_task_empty_title_rejected(client, auth_headers):
     res = await client.post("/tasks/", json={
         "title": "",

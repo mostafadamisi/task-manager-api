@@ -55,10 +55,7 @@ async def create_task(data: TaskCreate, user_id: str) -> TaskResponse:
 
 
 async def get_task_by_id(task_id: str) -> TaskResponse:
-    db = get_db()
-    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
-    if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    task = await get_task_or_404(task_id)
     return doc_to_response(task)
 
 
