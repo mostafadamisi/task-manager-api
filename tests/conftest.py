@@ -8,6 +8,15 @@ from app import database
 TEST_DB_NAME = "task_manager_test"
 
 
+@pytest.fixture(autouse=True)
+def disable_rate_limits():
+    from app.dependencies import limiter
+
+    limiter.enabled = False
+    yield
+    limiter.enabled = True
+
+
 @pytest.fixture
 async def setup_db():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
