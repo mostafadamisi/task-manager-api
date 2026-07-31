@@ -46,7 +46,7 @@ async def test_delete_project(client, auth_headers):
 
 async def test_delete_project_forbidden(client, auth_headers):
     res = await client.post("/auth/register", json={
-        "name": "Other", "email": "other@example.com", "password": "pass",
+        "name": "Other", "email": "other@example.com", "password": "password456",
     })
     other_token = res.json()["id"]
     created = await client.post("/projects/", json={

@@ -209,6 +209,29 @@ Actions: `task.created`, `task.updated`, `task.status_changed`, `task.deleted`.
 
 ---
 
+## Validation Rules
+
+All request bodies are validated with Pydantic v2; invalid input returns `422 Unprocessable Entity`.
+
+| Field | Rules |
+|-------|-------|
+| `name` (register) | 1–100 chars, whitespace-stripped, required |
+| `password` (register) | 6–128 chars, required |
+| `email` (register/login) | valid email format |
+| `project.name` | 1–100 chars, whitespace-stripped, required |
+| `project.description` | ≤ 2000 chars |
+| `project.members` | ≤ 50 items; each must be a valid ObjectId (else `400`) |
+| `task.title` | 1–200 chars, whitespace-stripped, required |
+| `task.description` | ≤ 2000 chars |
+| `task.status` | `todo`, `in_progress`, or `done` |
+| `task.project_id` | valid ObjectId (else `400`) |
+| `task.assignee` | valid ObjectId (else `400`) |
+| `due_date` | ISO 8601 datetime |
+
+All `{id}` path/query parameters (`project_id`, `task_id`, `assignee`) are validated as ObjectIds — a malformed ID returns `400 Bad Request`, while a well-formed but nonexistent ID returns `404 Not Found`.
+
+---
+
 ## Postman Collection
 
 Import `Task Manager API.postman_collection.json` into Postman. The collection includes:

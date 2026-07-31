@@ -6,6 +6,7 @@ from app.database import get_db
 from app.schemas.task import TaskCreate, TaskUpdate, TaskResponse
 from app.services.activity import create_activity
 from app.utils.pagination import paginate
+from app.utils.validation import parse_object_id
 
 
 def doc_to_response(doc) -> TaskResponse:
@@ -24,7 +25,7 @@ def doc_to_response(doc) -> TaskResponse:
 
 async def get_task_or_404(task_id: str) -> dict:
     db = get_db()
-    task = await db.tasks.find_one({"_id": ObjectId(task_id)})
+    task = await db.tasks.find_one({"_id": parse_object_id(task_id, "task_id")})
     if not task:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     return task
@@ -33,7 +34,7 @@ async def get_task_or_404(task_id: str) -> dict:
 async def create_task(data: TaskCreate, user_id: str) -> TaskResponse:
     db = get_db()
 
-    project = await db.projects.find_one({"_id": ObjectId(data.project_id)})
+    project = await db.projects.find_one({"_id": parse_object_id(data.project_id, "project_id")})
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
 
@@ -43,7 +44,7 @@ async def create_task(data: TaskCreate, user_id: str) -> TaskResponse:
         "status": data.status,
         "due_date": data.due_date,
         "project_id": ObjectId(data.project_id),
-        "assignee": ObjectId(data.assignee) if data.assignee else None,
+        "assignee": parse_object_id(data.assignee, "assignee") if data.assignee else None,
         "created_by": ObjectId(user_id),
         "created_at": datetime.now(timezone.utc),
     }
@@ -85,7 +86,9 @@ async def update_task(task_id: str, data: TaskUpdate) -> TaskResponse:
         return doc_to_response(task)
 
     if "assignee" in update_data:
-        update_data["assignee"] = ObjectId(update_data["assignee"]) if update_data["assignee"] else None
+        update_data["assignee"] = (
+            parse_object_id(update_data["assignee"], "assignee") if update_data["assignee"] else None
+        )
 
     update_data["updated_at"] = datetime.now(timezone.utc)
 
@@ -118,10 +121,10 @@ async def filter_tasks(
     if status:
         query["status"] = status
     if assignee:
-        query["assignee"] = ObjectId(assignee)
+        query["assignee"] = parse_object_id(assignee, "assignee")
     if due_date:
         query["due_date"] = {"$lte": due_date}
     if project_id:
-        query["project_id"] = ObjectId(project_id)
+        query["project_id"] = parse_object_id(project_id, "project_id")
 
     return await paginate(db.tasks, query, page, limit, mapper=doc_to_response)

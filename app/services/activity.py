@@ -3,6 +3,7 @@ from bson import ObjectId
 from app.database import get_db
 from app.schemas.activity import ActivityResponse
 from app.utils.pagination import paginate
+from app.utils.validation import parse_object_id
 
 
 def doc_to_response(doc) -> ActivityResponse:
@@ -34,5 +35,5 @@ async def get_task_activities(
     task_id: str, page: int = 1, limit: int = 20
 ) -> dict:
     db = get_db()
-    query = {"task_id": ObjectId(task_id)}
+    query = {"task_id": parse_object_id(task_id, "task_id")}
     return await paginate(db.activities, query, page, limit, sort_key="timestamp", mapper=doc_to_response)

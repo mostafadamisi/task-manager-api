@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from app.database import get_db
 from app.schemas.project import ProjectCreate, ProjectResponse
 from app.utils.pagination import paginate
+from app.utils.validation import parse_object_id
 
 
 def doc_to_response(doc) -> ProjectResponse:
@@ -19,7 +20,7 @@ def doc_to_response(doc) -> ProjectResponse:
 
 async def get_project_or_404(project_id: str) -> dict:
     db = get_db()
-    p = await db.projects.find_one({"_id": ObjectId(project_id)})
+    p = await db.projects.find_one({"_id": parse_object_id(project_id, "project_id")})
     if not p:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
     return p
@@ -31,7 +32,7 @@ async def create_project(data: ProjectCreate, user_id: str) -> ProjectResponse:
         "name": data.name,
         "description": data.description,
         "owner": ObjectId(user_id),
-        "members": [ObjectId(m) for m in data.members],
+        "members": [parse_object_id(m, "member") for m in data.members],
         "created_at": datetime.now(timezone.utc),
     }
     result = await db.projects.insert_one(project)
